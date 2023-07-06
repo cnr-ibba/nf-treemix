@@ -1,0 +1,10 @@
+
+# ignore nextflow output files
+.nextflow*
+
+# ignore results dir
+work/
+results/
+
+# ignore data dir
+data/
