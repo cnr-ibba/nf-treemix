@@ -1,4 +1,4 @@
-process PLINK_SUBSET {
+process PLINK_FREQ {
     tag "$meta.id"
     label 'process_low'
 
@@ -12,10 +12,10 @@ process PLINK_SUBSET {
     path(samples)
 
     output:
-    tuple val(meta), path("*.bed"), emit: bed
-    tuple val(meta), path("*.bim"), emit: bim
-    tuple val(meta), path("*.fam"), emit: fam
-    path "versions.yml"           , emit: versions
+    tuple val(meta), path("*.frq.strat.gz") , emit: freq
+    tuple val(meta), path("*.imiss")        , emit: imiss
+    tuple val(meta), path("*.lmiss")        , emit: lmiss
+    path "versions.yml"                     , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -23,15 +23,16 @@ process PLINK_SUBSET {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def bfile = "${bed.getBaseName()}"
-    if( "$bed" == "${prefix}.bed" ) error "Input and output names are the same, use \"task.ext.prefix\" to disambiguate!"
     """
     plink \\
-        --bfile ${bfile} \\
+        --bed ${bed}  \\
+        --bim ${bim}  \\
+        --fam ${fam}  \\
         --threads $task.cpus \\
         $args \\
-        --keep ${samples} \\
-        --make-bed \\
+        --freq gz \\
+        --missing \\
+        --within ${samples} \\
         --out $prefix
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

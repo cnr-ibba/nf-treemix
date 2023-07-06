@@ -7,6 +7,7 @@ if (!params.input) { exit 1, "Error: 'input' parameter not specified" }
 if (!params.plink_prefix) { exit 1, "Error: 'plink_prefix' parameter not specified" }
 
 include { PLINK_SUBSET } from './modules/local/plink_subset'
+include { PLINK_FREQ } from './modules/local/plink_freq'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from './modules/nf-core/custom/dumpsoftwareversions/main'
 
 workflow TREEMIX_PIPELINE {
@@ -25,6 +26,17 @@ workflow TREEMIX_PIPELINE {
     // Extract samples from PLINK file
     PLINK_SUBSET(plink_input_ch, samples_ch)
     ch_versions = ch_versions.mix(PLINK_SUBSET.out.versions)
+
+    // create a new input channel to calculate allele frequencines
+    freq_ch = PLINK_SUBSET.out.bed
+        .join(PLINK_SUBSET.out.bim)
+        .join(PLINK_SUBSET.out.fam)
+        //.view()
+
+    // calculate MAF
+    PLINK_FREQ(freq_ch, samples_ch)
+    ch_versions = ch_versions.mix(PLINK_FREQ.out.versions)
+
 
     // return software version
     CUSTOM_DUMPSOFTWAREVERSIONS (
