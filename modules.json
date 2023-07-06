@@ -1,5 +1,17 @@
 {
-    "name": "nf-treemix",
-    "homePage": "https://github.com/cnr-ibba/nf-treemix",
-    "repos": {}
+  "name": "nf-treemix",
+  "homePage": "https://github.com/cnr-ibba/nf-treemix",
+  "repos": {
+    "https://github.com/nf-core/modules.git": {
+      "modules": {
+        "nf-core": {
+          "custom/dumpsoftwareversions": {
+            "branch": "master",
+            "git_sha": "911696ea0b62df80e900ef244d7867d177971f73",
+            "installed_by": ["modules"]
+          }
+        }
+      }
+    }
+  }
 }
