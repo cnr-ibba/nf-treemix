@@ -8,6 +8,7 @@ if (!params.plink_prefix) { exit 1, "Error: 'plink_prefix' parameter not specifi
 
 include { PLINK_SUBSET } from './modules/local/plink_subset'
 include { PLINK_FREQ } from './modules/local/plink_freq'
+include { PLINK2TREEMIX } from './modules/local/plink2treemix'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from './modules/nf-core/custom/dumpsoftwareversions/main'
 
 workflow TREEMIX_PIPELINE {
@@ -37,6 +38,8 @@ workflow TREEMIX_PIPELINE {
     PLINK_FREQ(freq_ch, samples_ch)
     ch_versions = ch_versions.mix(PLINK_FREQ.out.versions)
 
+    // convert PLINK output into treemix input
+    PLINK2TREEMIX(PLINK_FREQ.out.freq)
 
     // return software version
     CUSTOM_DUMPSOFTWAREVERSIONS (
