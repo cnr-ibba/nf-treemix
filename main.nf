@@ -6,11 +6,12 @@ nextflow.enable.dsl = 2
 if (!params.input) { exit 1, "Error: 'input' parameter not specified" }
 if (!params.plink_prefix) { exit 1, "Error: 'plink_prefix' parameter not specified" }
 
-include { PLINK_SUBSET } from './modules/local/plink_subset'
-include { PLINK_FREQ } from './modules/local/plink_freq'
-include { PLINK2TREEMIX } from './modules/local/plink2treemix'
-include { TREEMIX } from './modules/local/treemix'
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from './modules/nf-core/custom/dumpsoftwareversions/main'
+include { PLINK_SUBSET                  } from './modules/local/plink_subset'
+include { PLINK_FREQ                    } from './modules/local/plink_freq'
+include { PLINK2TREEMIX                 } from './modules/local/plink2treemix'
+include { TREEMIX                       } from './modules/local/treemix'
+include { TREEMIX_PLOTS                 } from './modules/local/treemix_plots'
+include { CUSTOM_DUMPSOFTWAREVERSIONS   } from './modules/nf-core/custom/dumpsoftwareversions/main'
 
 workflow TREEMIX_PIPELINE {
     // collect software version
@@ -45,8 +46,26 @@ workflow TREEMIX_PIPELINE {
     // define migration intervals
     migrations_ch = Channel.of( 0..params.migrations )
 
+    treemix_input_ch = PLINK2TREEMIX.out.treemix_freq
+        .combine(migrations_ch)
+        .map{ meta, path, migration -> [[id: meta.id, migration: migration], path, migration]}
+        // .view()
+
     // call treemix
-    TREEMIX(PLINK2TREEMIX.out.treemix_freq, migrations_ch)
+    TREEMIX(treemix_input_ch)
+
+    // join treemix output channles
+    treemix_out_ch = TREEMIX.out.cov
+        .join(TREEMIX.out.covse)
+        .join(TREEMIX.out.modelcov)
+        .join(TREEMIX.out.treeout)
+        .join(TREEMIX.out.vertices)
+        .join(TREEMIX.out.edges)
+        .join(TREEMIX.out.llik)
+        // .view()
+
+    // plot graphs
+    TREEMIX_PLOTS(treemix_out_ch)
 
     // return software version
     CUSTOM_DUMPSOFTWAREVERSIONS (

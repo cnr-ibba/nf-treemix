@@ -8,8 +8,7 @@ process TREEMIX {
         'biocontainers/treemix:1.13--hf961e7c_8' }"
 
     input:
-    tuple val(meta), path(treemix_freq)
-    each(migration)
+    tuple val(meta), path(treemix_freq), val(migration)
 
     output:
     tuple val(meta), path("*.cov.gz")       , emit: cov
