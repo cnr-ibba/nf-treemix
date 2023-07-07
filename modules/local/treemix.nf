@@ -9,6 +9,7 @@ process TREEMIX {
 
     input:
     tuple val(meta), path(treemix_freq)
+    each(migration)
 
     output:
     tuple val(meta), path("*.cov.gz")       , emit: cov
@@ -27,7 +28,7 @@ process TREEMIX {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def outgroup_opt = params.treemix_outgroup ? "-root ${params.treemix_outgroup}" : ""
     def k_opt = params.treemix_k ? "-k ${params.treemix_k}" : ""
-    def m_opt = params.treemix_m ? "-m ${params.treemix_m}" : ""
+    def m_opt = migration ? "-m ${migration}" : ""
     """
     treemix \\
         -i ${treemix_freq} \\
@@ -35,7 +36,7 @@ process TREEMIX {
         ${k_opt} \\
         ${m_opt} \\
         ${args} \\
-        -o ${prefix}
+        -o ${prefix}_m${migration}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         treemix: \$(echo \$(treemix --version 2>&1) | sed 's/^TreeMix v. //; s/ \$Revision.*//')

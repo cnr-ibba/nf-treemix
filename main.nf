@@ -42,8 +42,11 @@ workflow TREEMIX_PIPELINE {
     // convert PLINK output into treemix input
     PLINK2TREEMIX(PLINK_FREQ.out.freq)
 
+    // define migration intervals
+    migrations_ch = Channel.of( 0..params.migrations )
+
     // call treemix
-    TREEMIX(PLINK2TREEMIX.out.treemix_freq)
+    TREEMIX(PLINK2TREEMIX.out.treemix_freq, migrations_ch)
 
     // return software version
     CUSTOM_DUMPSOFTWAREVERSIONS (
