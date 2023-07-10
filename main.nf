@@ -9,6 +9,7 @@ if (!params.plink_prefix) { exit 1, "Error: 'plink_prefix' parameter not specifi
 include { PLINK_SUBSET                  } from './modules/local/plink_subset'
 include { PLINK_FREQ                    } from './modules/local/plink_freq'
 include { PLINK2TREEMIX                 } from './modules/local/plink2treemix'
+include { TREEMIX                       } from './modules/local/treemix'
 include { ORIENTAGRAPH                  } from './modules/local/orientagraph'
 include { TREEMIX_PLOTS                 } from './modules/local/treemix_plots'
 include { CUSTOM_DUMPSOFTWAREVERSIONS   } from './modules/nf-core/custom/dumpsoftwareversions/main'
@@ -52,18 +53,32 @@ workflow TREEMIX_PIPELINE {
         // .view()
 
     // call treemix
-    ORIENTAGRAPH(treemix_input_ch)
-    ch_versions = ch_versions.mix(ORIENTAGRAPH.out.versions)
+    if ( params.with_treemix ) {
+        TREEMIX(treemix_input_ch)
+        ch_versions = ch_versions.mix(TREEMIX.out.versions)
 
-    // join treemix output channles
-    treemix_out_ch = ORIENTAGRAPH.out.cov
-        .join(ORIENTAGRAPH.out.covse)
-        .join(ORIENTAGRAPH.out.modelcov)
-        .join(ORIENTAGRAPH.out.treeout)
-        .join(ORIENTAGRAPH.out.vertices)
-        .join(ORIENTAGRAPH.out.edges)
-        .join(ORIENTAGRAPH.out.llik)
-        // .view()
+        treemix_out_ch = TREEMIX.out.cov
+            .join(TREEMIX.out.covse)
+            .join(TREEMIX.out.modelcov)
+            .join(TREEMIX.out.treeout)
+            .join(TREEMIX.out.vertices)
+            .join(TREEMIX.out.edges)
+            .join(TREEMIX.out.llik)
+            // .view()
+    } else {
+        ORIENTAGRAPH(treemix_input_ch)
+        ch_versions = ch_versions.mix(ORIENTAGRAPH.out.versions)
+
+        // join treemix output channles
+        treemix_out_ch = ORIENTAGRAPH.out.cov
+            .join(ORIENTAGRAPH.out.covse)
+            .join(ORIENTAGRAPH.out.modelcov)
+            .join(ORIENTAGRAPH.out.treeout)
+            .join(ORIENTAGRAPH.out.vertices)
+            .join(ORIENTAGRAPH.out.edges)
+            .join(ORIENTAGRAPH.out.llik)
+            // .view()
+    }
 
     // plot graphs
     TREEMIX_PLOTS(treemix_out_ch)
