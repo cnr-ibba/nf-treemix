@@ -2,6 +2,7 @@ process ORIENTAGRAPH {
     tag "$meta.id"
     label 'process_single'
     label 'process_long'
+    label 'error_ignore'
 
     conda "bioconda::orientagraph=1.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -30,7 +31,7 @@ process ORIENTAGRAPH {
     def outgroup_opt = params.treemix_outgroup ? "-root ${params.treemix_outgroup}" : ""
     def k_opt = params.treemix_k ? "-k ${params.treemix_k}" : ""
     def m_opt = migration ? "-m ${migration}" : ""
-    def seed = (migration+1) * iteration
+    def seed = (migration + task.attempt) * iteration
     """
     orientagraph \\
         -i ${treemix_freq} \\

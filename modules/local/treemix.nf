@@ -2,6 +2,7 @@ process TREEMIX {
     tag "$meta.id"
     label 'process_single'
     label 'process_long'
+    label 'error_retry'
 
     conda "bioconda::treemix=1.13"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -30,7 +31,7 @@ process TREEMIX {
     def outgroup_opt = params.treemix_outgroup ? "-root ${params.treemix_outgroup}" : ""
     def k_opt = params.treemix_k ? "-k ${params.treemix_k}" : ""
     def m_opt = migration ? "-m ${migration}" : ""
-    def seed = (migration+1) * iteration
+    def seed = (migration + task.attempt) * iteration
     """
     treemix \\
         -i ${treemix_freq} \\
