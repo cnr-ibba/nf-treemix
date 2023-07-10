@@ -45,11 +45,16 @@ workflow TREEMIX_PIPELINE {
     PLINK2TREEMIX(PLINK_FREQ.out.freq)
 
     // define migration intervals
-    migrations_ch = Channel.of( 0..params.migrations )
+    migrations_ch = Channel.of( 0..params.migrations )//.view()
+
+    // define bootstrap iterations
+    iterations_ch = Channel.of ( 1..params.treemix_iterations )//.view()
 
     treemix_input_ch = PLINK2TREEMIX.out.treemix_freq
         .combine(migrations_ch)
-        .map{ meta, path, migration -> [[id: meta.id, migration: migration], path, migration]}
+        .combine(iterations_ch)
+        .map{ meta, path, migration, iteration -> [
+            [id: meta.id, migration: migration, iteration: iteration], path, migration, iteration]}
         // .view()
 
     // call treemix

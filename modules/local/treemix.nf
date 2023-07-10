@@ -9,7 +9,7 @@ process TREEMIX {
         'biocontainers/treemix:1.13--hf961e7c_8' }"
 
     input:
-    tuple val(meta), path(treemix_freq), val(migration)
+    tuple val(meta), path(treemix_freq), val(migration), val(iteration)
 
     output:
     tuple val(meta), path("*.cov.gz")       , emit: cov
@@ -30,14 +30,17 @@ process TREEMIX {
     def outgroup_opt = params.treemix_outgroup ? "-root ${params.treemix_outgroup}" : ""
     def k_opt = params.treemix_k ? "-k ${params.treemix_k}" : ""
     def m_opt = migration ? "-m ${migration}" : ""
+    def seed = (migration+1) * iteration
     """
     treemix \\
         -i ${treemix_freq} \\
         ${outgroup_opt} \\
         ${k_opt} \\
         ${m_opt} \\
+        -boostrap \\
+        -seed ${seed} \\
         ${args} \\
-        -o ${prefix}_m${migration}
+        -o ${prefix}_m${migration}_i${iteration}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         treemix: \$(echo \$(treemix --version 2>&1) | sed 's/^TreeMix v. //; s/ \$Revision.*//')
