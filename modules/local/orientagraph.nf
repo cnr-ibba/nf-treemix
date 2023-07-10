@@ -41,7 +41,7 @@ process ORIENTAGRAPH {
         -boostrap \\
         -seed ${seed} \\
         ${args} \\
-        -o ${prefix}_m${migration}_i${iteration}
+        -o ${prefix}.${iteration}.${migration}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         orientagraph: \$(echo \$(orientagraph --version 2>&1) | head -n1 | sed 's/^OrientAGraph //; s/ OrientAGraph is built from TreeMix.*//')

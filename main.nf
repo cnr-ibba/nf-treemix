@@ -14,6 +14,18 @@ include { ORIENTAGRAPH                  } from './modules/local/orientagraph'
 include { TREEMIX_PLOTS                 } from './modules/local/treemix_plots'
 include { CUSTOM_DUMPSOFTWAREVERSIONS   } from './modules/nf-core/custom/dumpsoftwareversions/main'
 
+
+process OPTM {
+    input:
+    tuple val(meta), path(files)
+
+    script:
+    """
+    echo ${files}
+    """
+}
+
+
 workflow TREEMIX_PIPELINE {
     // collect software version
     ch_versions = Channel.empty()
@@ -45,7 +57,7 @@ workflow TREEMIX_PIPELINE {
     PLINK2TREEMIX(PLINK_FREQ.out.freq)
 
     // define migration intervals
-    migrations_ch = Channel.of( 0..params.migrations )//.view()
+    migrations_ch = Channel.of( 1..params.migrations )//.view()
 
     // define bootstrap iterations
     iterations_ch = Channel.of ( 1..params.treemix_iterations )//.view()
@@ -70,6 +82,14 @@ workflow TREEMIX_PIPELINE {
             .join(TREEMIX.out.edges)
             .join(TREEMIX.out.llik)
             // .view()
+
+        optM_input_ch = TREEMIX.out.cov.map{ meta, file -> file }
+            .concat(TREEMIX.out.modelcov.map{ meta, file -> file })
+            .concat(TREEMIX.out.llik.map{ meta, file -> file })
+            .collect()
+            .map{ it -> [[ id: "${file(params.input).getBaseName()}" ], it]}
+            // .view()
+
     } else {
         ORIENTAGRAPH(treemix_input_ch)
         ch_versions = ch_versions.mix(ORIENTAGRAPH.out.versions)
@@ -83,7 +103,16 @@ workflow TREEMIX_PIPELINE {
             .join(ORIENTAGRAPH.out.edges)
             .join(ORIENTAGRAPH.out.llik)
             // .view()
+
+        optM_input_ch = ORIENTAGRAPH.out.cov.map{ meta, file -> file }
+            .concat(ORIENTAGRAPH.out.modelcov.map{ meta, file -> file })
+            .concat(ORIENTAGRAPH.out.llik.map{ meta, file -> file })
+            .collect()
+            .map{ it -> [[ id: "${file(params.input).getBaseName()}" ], it]}
+            // .view()
     }
+
+    OPTM(optM_input_ch)
 
     // plot graphs
     TREEMIX_PLOTS(treemix_out_ch)

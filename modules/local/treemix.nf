@@ -41,7 +41,7 @@ process TREEMIX {
         -boostrap \\
         -seed ${seed} \\
         ${args} \\
-        -o ${prefix}_m${migration}_i${iteration}
+        -o ${prefix}.${iteration}.${migration}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         treemix: \$(echo \$(treemix --version 2>&1) | sed 's/^TreeMix v. //; s/ \$Revision.*//')
