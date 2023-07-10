@@ -1,12 +1,12 @@
-process TREEMIX {
+process ORIENTAGRAPH {
     tag "$meta.id"
     label 'process_single'
     label 'process_long'
 
-    conda "bioconda::treemix=1.13"
+    conda "bioconda::orientagraph=1.1"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/treemix:1.13--hf961e7c_8':
-        'biocontainers/treemix:1.13--hf961e7c_8' }"
+        'https://depot.galaxyproject.org/singularity/orientagraph:1.1--hcfb5669_4':
+        'biocontainers/orientagraph:1.1--hcfb5669_4' }"
 
     input:
     tuple val(meta), path(treemix_freq), val(migration)
@@ -31,7 +31,7 @@ process TREEMIX {
     def k_opt = params.treemix_k ? "-k ${params.treemix_k}" : ""
     def m_opt = migration ? "-m ${migration}" : ""
     """
-    treemix \\
+    orientagraph \\
         -i ${treemix_freq} \\
         ${outgroup_opt} \\
         ${k_opt} \\
@@ -40,7 +40,7 @@ process TREEMIX {
         -o ${prefix}_m${migration}
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        treemix: \$(echo \$(treemix --version 2>&1) | sed 's/^TreeMix v. //; s/ \$Revision.*//')
+        orientagraph: \$(echo \$(orientagraph --version 2>&1) | head -n1 | sed 's/^OrientAGraph //; s/ OrientAGraph is built from TreeMix.*//')
     END_VERSIONS
     """
 }
