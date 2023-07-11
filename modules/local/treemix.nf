@@ -1,5 +1,5 @@
 process TREEMIX {
-    tag "$meta.id"
+    tag "$meta.id-m${meta.migration}-i${iteration}"
     label 'process_single'
     label 'process_long'
     label 'error_retry'
@@ -40,6 +40,8 @@ process TREEMIX {
         ${m_opt} \\
         -boostrap \\
         -seed ${seed} \\
+        -se \\
+        -global \\
         ${args} \\
         -o ${prefix}.${iteration}.${migration}
     cat <<-END_VERSIONS > versions.yml
