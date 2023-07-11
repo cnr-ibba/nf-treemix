@@ -11,19 +11,9 @@ include { PLINK_FREQ                    } from './modules/local/plink_freq'
 include { PLINK2TREEMIX                 } from './modules/local/plink2treemix'
 include { TREEMIX                       } from './modules/local/treemix'
 include { ORIENTAGRAPH                  } from './modules/local/orientagraph'
+include { OPTM                          } from './modules/local/optm'
 include { TREEMIX_PLOTS                 } from './modules/local/treemix_plots'
 include { CUSTOM_DUMPSOFTWAREVERSIONS   } from './modules/nf-core/custom/dumpsoftwareversions/main'
-
-
-process OPTM {
-    input:
-    tuple val(meta), path(files)
-
-    script:
-    """
-    echo ${files}
-    """
-}
 
 
 workflow TREEMIX_PIPELINE {
@@ -112,7 +102,9 @@ workflow TREEMIX_PIPELINE {
             // .view()
     }
 
-    OPTM(optM_input_ch)
+    // calculate graphs with OptM
+    methods = ["Evanno", "linear", "SiZer"]
+    OPTM(optM_input_ch, methods)
 
     // plot graphs
     TREEMIX_PLOTS(treemix_out_ch)
