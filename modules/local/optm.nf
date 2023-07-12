@@ -1,7 +1,6 @@
 process OPTM {
     tag "$method"
     label 'process_single'
-    label 'error_ignore'
 
     container "bunop/r-optm:0.1"
 
@@ -10,7 +9,8 @@ process OPTM {
     each(method)
 
     output:
-    tuple val(meta), path("OptM_*.png"), emit: png
+    tuple val(meta), path("OptM_*.png"), emit: png, optional: true
+    tuple val(meta), path("OptM_*.pdf"), emit: pdf, optional: true
     tuple val(meta), path("OptM_*.tsv"), emit: tsv, optional: true
 
     when:
@@ -25,11 +25,17 @@ process OPTM {
 
     library(OptM)
 
+    method <- "${method}"
     # latest orientagraph have the same llik format as treemix
     test <- optM(folder = ".", orientagraph = FALSE, method = "${method}", tsv = "OptM_${method}.tsv")
-    png("OptM_${method}.png", width = 6, height = 6, units = 'in', res = 300)
-    plot_optM(test, method = "${method}", plot = TRUE, pdf = NULL)
-    title(paste("OptM", "${method}"))
-    dev.off()
+
+    if (method != 'Evanno') {
+        png("OptM_${method}.png", width = 6, height = 6, units = 'in', res = 300)
+        plot_optM(test, method = "${method}", plot = TRUE, pdf = NULL)
+        title(paste("OptM", "${method}"))
+        dev.off()
+    } else {
+        plot_optM(test, method = "${method}", plot = FALSE, pdf = "OptM_${method}.pdf")
+    }
     """
 }

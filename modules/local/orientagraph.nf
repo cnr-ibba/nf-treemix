@@ -10,6 +10,7 @@ process ORIENTAGRAPH {
     tuple val(meta), path(treemix_freq), val(migration), val(iteration)
 
     output:
+    tuple val(meta), path("*.treemix.gz")   , emit: treemix
     tuple val(meta), path("*.cov.gz")       , emit: cov
     tuple val(meta), path("*.covse.gz")     , emit: covse
     tuple val(meta), path("*.modelcov.gz")  , emit: modelcov
@@ -30,12 +31,15 @@ process ORIENTAGRAPH {
     def m_opt = migration ? "-m ${migration}" : ""
     def seed = (migration + task.attempt) * iteration
     """
+    # Generate bootstrapped input file with ~80% of the SNP loci
+    # inspired from https://rfitak.shinyapps.io/OptM/
+    gunzip -c ${treemix_freq} | awk 'BEGIN {srand(${seed})} { if (NR==1) {print \$0} else if (rand() <= .8) print \$0}' | gzip > ${prefix}.${iteration}.${migration}.treemix.gz
+
     orientagraph \\
-        -i ${treemix_freq} \\
+        -i ${prefix}.${iteration}.${migration}.treemix.gz \\
         ${outgroup_opt} \\
         ${k_opt} \\
         ${m_opt} \\
-        -boostrap \\
         -seed ${seed} \\
         -se \\
         -global \\
