@@ -4,10 +4,7 @@ process ORIENTAGRAPH {
     label 'process_long'
     label 'error_ignore'
 
-    conda "bioconda::orientagraph=1.1"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/orientagraph:1.1--hcfb5669_4':
-        'biocontainers/orientagraph:1.1--hcfb5669_4' }"
+    container "bunop/orientagraph:0.1"
 
     input:
     tuple val(meta), path(treemix_freq), val(migration), val(iteration)
