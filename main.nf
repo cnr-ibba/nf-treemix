@@ -10,8 +10,11 @@ include { PLINK_SUBSET                  } from './modules/local/plink_subset'
 include { PLINK_FREQ                    } from './modules/local/plink_freq'
 include { PLINK2TREEMIX                 } from './modules/local/plink2treemix'
 include { TREEMIX                       } from './modules/local/treemix'
+include { ORIENTAGRAPH                  } from './modules/local/orientagraph'
+include { OPTM                          } from './modules/local/optm'
 include { TREEMIX_PLOTS                 } from './modules/local/treemix_plots'
 include { CUSTOM_DUMPSOFTWAREVERSIONS   } from './modules/nf-core/custom/dumpsoftwareversions/main'
+
 
 workflow TREEMIX_PIPELINE {
     // collect software version
@@ -44,25 +47,64 @@ workflow TREEMIX_PIPELINE {
     PLINK2TREEMIX(PLINK_FREQ.out.freq)
 
     // define migration intervals
-    migrations_ch = Channel.of( 0..params.migrations )
+    migrations_ch = Channel.of( 1..params.migrations )//.view()
+
+    // define bootstrap iterations
+    iterations_ch = Channel.of ( 1..params.treemix_iterations )//.view()
 
     treemix_input_ch = PLINK2TREEMIX.out.treemix_freq
         .combine(migrations_ch)
-        .map{ meta, path, migration -> [[id: meta.id, migration: migration], path, migration]}
+        .combine(iterations_ch)
+        .map{ meta, path, migration, iteration -> [
+            [id: meta.id, migration: migration, iteration: iteration], path, migration, iteration]}
         // .view()
 
     // call treemix
-    TREEMIX(treemix_input_ch)
+    if ( params.with_treemix ) {
+        TREEMIX(treemix_input_ch)
+        ch_versions = ch_versions.mix(TREEMIX.out.versions)
 
-    // join treemix output channles
-    treemix_out_ch = TREEMIX.out.cov
-        .join(TREEMIX.out.covse)
-        .join(TREEMIX.out.modelcov)
-        .join(TREEMIX.out.treeout)
-        .join(TREEMIX.out.vertices)
-        .join(TREEMIX.out.edges)
-        .join(TREEMIX.out.llik)
-        // .view()
+        treemix_out_ch = TREEMIX.out.cov
+            .join(TREEMIX.out.covse)
+            .join(TREEMIX.out.modelcov)
+            .join(TREEMIX.out.treeout)
+            .join(TREEMIX.out.vertices)
+            .join(TREEMIX.out.edges)
+            .join(TREEMIX.out.llik)
+            // .view()
+
+        optM_input_ch = TREEMIX.out.cov.map{ meta, file -> file }
+            .concat(TREEMIX.out.modelcov.map{ meta, file -> file })
+            .concat(TREEMIX.out.llik.map{ meta, file -> file })
+            .collect()
+            .map{ it -> [[ id: "${file(params.input).getBaseName()}" ], it]}
+            // .view()
+
+    } else {
+        ORIENTAGRAPH(treemix_input_ch)
+        ch_versions = ch_versions.mix(ORIENTAGRAPH.out.versions)
+
+        // join treemix output channles
+        treemix_out_ch = ORIENTAGRAPH.out.cov
+            .join(ORIENTAGRAPH.out.covse)
+            .join(ORIENTAGRAPH.out.modelcov)
+            .join(ORIENTAGRAPH.out.treeout)
+            .join(ORIENTAGRAPH.out.vertices)
+            .join(ORIENTAGRAPH.out.edges)
+            .join(ORIENTAGRAPH.out.llik)
+            // .view()
+
+        optM_input_ch = ORIENTAGRAPH.out.cov.map{ meta, file -> file }
+            .concat(ORIENTAGRAPH.out.modelcov.map{ meta, file -> file })
+            .concat(ORIENTAGRAPH.out.llik.map{ meta, file -> file })
+            .collect()
+            .map{ it -> [[ id: "${file(params.input).getBaseName()}" ], it]}
+            // .view()
+    }
+
+    // calculate graphs with OptM
+    methods = ["Evanno", "linear", "SiZer"]
+    OPTM(optM_input_ch, methods)
 
     // plot graphs
     TREEMIX_PLOTS(treemix_out_ch)
