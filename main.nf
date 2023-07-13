@@ -60,27 +60,7 @@ workflow TREEMIX_PIPELINE {
         // .view()
 
     // call treemix
-    if ( params.with_treemix ) {
-        TREEMIX(treemix_input_ch)
-        ch_versions = ch_versions.mix(TREEMIX.out.versions)
-
-        treemix_out_ch = TREEMIX.out.cov
-            .join(TREEMIX.out.covse)
-            .join(TREEMIX.out.modelcov)
-            .join(TREEMIX.out.treeout)
-            .join(TREEMIX.out.vertices)
-            .join(TREEMIX.out.edges)
-            .join(TREEMIX.out.llik)
-            // .view()
-
-        optM_input_ch = TREEMIX.out.cov.map{ meta, file -> file }
-            .concat(TREEMIX.out.modelcov.map{ meta, file -> file })
-            .concat(TREEMIX.out.llik.map{ meta, file -> file })
-            .collect()
-            .map{ it -> [[ id: "${file(params.input).getBaseName()}" ], it]}
-            // .view()
-
-    } else {
+    if ( params.with_orientagraph ) {
         ORIENTAGRAPH(treemix_input_ch)
         ch_versions = ch_versions.mix(ORIENTAGRAPH.out.versions)
 
@@ -97,6 +77,25 @@ workflow TREEMIX_PIPELINE {
         optM_input_ch = ORIENTAGRAPH.out.cov.map{ meta, file -> file }
             .concat(ORIENTAGRAPH.out.modelcov.map{ meta, file -> file })
             .concat(ORIENTAGRAPH.out.llik.map{ meta, file -> file })
+            .collect()
+            .map{ it -> [[ id: "${file(params.input).getBaseName()}" ], it]}
+            // .view()
+    } else {
+        TREEMIX(treemix_input_ch)
+        ch_versions = ch_versions.mix(TREEMIX.out.versions)
+
+        treemix_out_ch = TREEMIX.out.cov
+            .join(TREEMIX.out.covse)
+            .join(TREEMIX.out.modelcov)
+            .join(TREEMIX.out.treeout)
+            .join(TREEMIX.out.vertices)
+            .join(TREEMIX.out.edges)
+            .join(TREEMIX.out.llik)
+            // .view()
+
+        optM_input_ch = TREEMIX.out.cov.map{ meta, file -> file }
+            .concat(TREEMIX.out.modelcov.map{ meta, file -> file })
+            .concat(TREEMIX.out.llik.map{ meta, file -> file })
             .collect()
             .map{ it -> [[ id: "${file(params.input).getBaseName()}" ], it]}
             // .view()
