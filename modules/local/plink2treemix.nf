@@ -19,4 +19,9 @@ process PLINK2TREEMIX {
         ${prefix}.treemix.frq.gz
     """
 
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.treemix.frq.gz
+    """
 }

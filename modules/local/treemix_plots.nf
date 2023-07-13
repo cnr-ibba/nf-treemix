@@ -1,5 +1,5 @@
 process TREEMIX_PLOTS {
-    tag "$meta.id"
+    tag "$meta.id-m${meta.migration}-i${meta.iteration}"
     label 'process_single'
 
     conda "bioconda::treemix=1.13"
