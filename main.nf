@@ -6,11 +6,12 @@ nextflow.enable.dsl = 2
 if (!params.input) { exit 1, "Error: 'input' parameter not specified" }
 if (!params.plink_prefix) { exit 1, "Error: 'plink_prefix' parameter not specified" }
 
-include { PLINK_SUBSET                      } from './modules/local/plink_subset'
-include { PLINK_FREQ                        } from './modules/local/plink_freq'
-include { PLINK2TREEMIX                     } from './modules/local/plink2treemix'
-include { TREEMIX_SIMPLE; TREEMIX_BOOTSTRAP } from './workflows/treemix'
-include { CUSTOM_DUMPSOFTWAREVERSIONS       } from './modules/nf-core/custom/dumpsoftwareversions/main'
+include { PLINK_SUBSET                                } from './modules/local/plink_subset'
+include { PLINK_FREQ                                  } from './modules/local/plink_freq'
+include { PLINK2TREEMIX                               } from './modules/local/plink2treemix'
+include { TREEMIX_SIMPLE; TREEMIX_BOOTSTRAP           } from './workflows/treemix'
+include { ORIENTAGRAPH_SIMPLE; ORIENTAGRAPH_BOOTSTRAP } from './workflows/orientagraph'
+include { CUSTOM_DUMPSOFTWAREVERSIONS                 } from './modules/nf-core/custom/dumpsoftwareversions/main'
 
 
 workflow CNR_IBBA {
@@ -45,14 +46,16 @@ workflow CNR_IBBA {
 
     if ( params.with_bootstrap ) {
         if ( params.with_orientagraph ) {
-
+            ORIENTAGRAPH_BOOTSTRAP(PLINK2TREEMIX.out.treemix_freq)
+            ch_versions = ch_versions.mix(ORIENTAGRAPH_BOOTSTRAP.out.versions)
         } else {
             TREEMIX_BOOTSTRAP(PLINK2TREEMIX.out.treemix_freq)
             ch_versions = ch_versions.mix(TREEMIX_BOOTSTRAP.out.versions)
         }
     } else {
         if ( params.with_orientagraph ) {
-
+            ORIENTAGRAPH_SIMPLE(PLINK2TREEMIX.out.treemix_freq)
+            ch_versions = ch_versions.mix(ORIENTAGRAPH_SIMPLE.out.versions)
         } else {
             TREEMIX_SIMPLE(PLINK2TREEMIX.out.treemix_freq)
             ch_versions = ch_versions.mix(TREEMIX_SIMPLE.out.versions)
