@@ -12,7 +12,11 @@ workflow ORIENTAGRAPH_PIPELINE {
     ch_versions = Channel.empty()
 
     // define migration intervals
-    migrations_ch = Channel.of( 1..params.migrations )//.view()
+    if ( params.single_migration || params.migrations == 0) {
+        migrations_ch = Channel.value( params.migrations )
+    } else {
+        migrations_ch = Channel.of( 1..params.migrations )//.view()
+    }
 
     // define bootstrap iterations
     if ( params.with_bootstrap ) {
