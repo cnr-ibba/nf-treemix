@@ -16,7 +16,7 @@ workflow ORIENTAGRAPH_PIPELINE {
 
     // define bootstrap iterations
     if ( params.with_bootstrap ) {
-        iterations_ch = Channel.of ( 1..params.treemix_iterations )//.view()
+        iterations_ch = Channel.of ( 1..params.bootstrap_iterations )//.view()
     } else {
         iterations_ch = Channel.value(1)
     }
