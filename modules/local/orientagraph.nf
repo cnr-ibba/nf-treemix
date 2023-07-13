@@ -2,7 +2,7 @@
 process ORIENTAGRAPH {
     tag "$meta.id-m${meta.migration}"
     label 'process_single'
-    label 'process_long'
+    label 'unlimited_time'
     label 'error_ignore'
 
     container "bunop/orientagraph:0.1"
@@ -51,7 +51,7 @@ process ORIENTAGRAPH {
 process ORIENTAGRAPH_WITH_SAMPLING {
     tag "$meta.id-m${meta.migration}-i${iteration}"
     label 'process_single'
-    label 'process_long'
+    label 'unlimited_time'
     label 'error_ignore'
 
     container "bunop/orientagraph:0.1"

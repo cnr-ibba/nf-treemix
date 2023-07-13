@@ -2,7 +2,7 @@
 process TREEMIX {
     tag "$meta.id-m${meta.migration}"
     label 'process_single'
-    label 'process_long'
+    label 'unlimited_time'
     label 'error_retry'
 
     conda "bioconda::treemix=1.13"
@@ -53,7 +53,7 @@ process TREEMIX {
 process TREEMIX_WITH_SAMPLING {
     tag "$meta.id-m${meta.migration}-i${iteration}"
     label 'process_single'
-    label 'process_long'
+    label 'unlimited_time'
     label 'error_retry'
 
     conda "bioconda::treemix=1.13"
