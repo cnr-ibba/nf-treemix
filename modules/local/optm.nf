@@ -19,7 +19,6 @@ process OPTM {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def outgroup_opt = params.treemix_outgroup ? "-root ${params.treemix_outgroup}" : ""
     """
     #!/usr/bin/env Rscript
 
@@ -37,5 +36,12 @@ process OPTM {
     } else {
         plot_optM(test, method = "${method}", plot = FALSE, pdf = "OptM_${method}.pdf")
     }
+    """
+
+    stub:
+    """
+    touch OptM_${method}.png
+    touch OptM_${method}.tsv
+    touch OptM_${method}.pdf
     """
 }

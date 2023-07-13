@@ -30,4 +30,10 @@ process TREEMIX_PLOTS {
     title(paste("${meta.id}", "${meta.migration}", "migrations"))
     dev.off()
     """
+
+    stub:
+    def stem = llik.getBaseName()
+    """
+    touch ${stem}_tree.png
+    """
 }
