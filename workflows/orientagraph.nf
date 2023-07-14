@@ -48,16 +48,19 @@ workflow ORIENTAGRAPH_PIPELINE {
     // plot graphs
     TREEMIX_PLOTS(treemix_out_ch)
 
-    optM_input_ch = ORIENTAGRAPH.out.cov.map{ meta, file -> file }
-        .concat(ORIENTAGRAPH.out.modelcov.map{ meta, file -> file })
-        .concat(ORIENTAGRAPH.out.llik.map{ meta, file -> file })
-        .collect()
-        .map{ it -> [[ id: "${file(params.input).getBaseName()}" ], it]}
-        // .view()
+    if ( params.with_bootstrap ) {
+        // prepare OptM input
+        optM_input_ch = ORIENTAGRAPH.out.cov.map{ meta, file -> file }
+            .concat(ORIENTAGRAPH.out.modelcov.map{ meta, file -> file })
+            .concat(ORIENTAGRAPH.out.llik.map{ meta, file -> file })
+            .collect()
+            .map{ it -> [[ id: "${file(params.input).getBaseName()}" ], it]}
+            // .view()
 
-    // calculate graphs with OptM
-    methods = ["Evanno", "linear", "SiZer"]
-    OPTM(optM_input_ch, methods)
+        // calculate graphs with OptM
+        methods = ["Evanno", "linear", "SiZer"]
+        OPTM(optM_input_ch, methods)
+    }
 
     emit:
     versions = ch_versions              // channel: [ versions.yml ]

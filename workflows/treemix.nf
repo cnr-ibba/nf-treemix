@@ -45,7 +45,7 @@ workflow TREEMIX_PIPELINE {
         .join(TREEMIX.out.llik)
         // .view()
 
-        // plot graphs
+    // plot graphs
     TREEMIX_PLOTS(treemix_out_ch)
 
     if ( params.with_bootstrap ) {
