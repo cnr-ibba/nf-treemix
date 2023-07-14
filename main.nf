@@ -64,8 +64,8 @@ workflow CNR_IBBA {
         treemix_vertices = file(params.treemix_vertices)
     } else {
         // https://nextflow-io.github.io/patterns/optional-input/
-        treemix_vertices = file("NO_FILE")
-        treemix_edges = file("NO_FILE")
+        treemix_vertices = file("NO_VERTICES")
+        treemix_edges = file("NO_EDGES")
     }
 
     // create treemix input channel

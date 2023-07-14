@@ -33,7 +33,7 @@ process ORIENTAGRAPH {
     def k_opt = params.treemix_k ? "-k ${params.treemix_k}" : ""
     def m_opt = migration ? "-m ${migration}" : ""
     def seed = (migration + task.attempt) * iteration
-    def gf_opt = (treemix_vertices.name != 'NO_FILE' && treemix_edges.name != 'NO_FILE') ? "-gf ${treemix_vertices} ${treemix_edges}" : ""
+    def gf_opt = (treemix_vertices.name != 'NO_VERTICES' && treemix_edges.name != 'NO_EDGES') ? "-gf ${treemix_vertices} ${treemix_edges}" : ""
     def outfile = params.with_bootstrap ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
 
     if( params.with_bootstrap )
