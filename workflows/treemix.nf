@@ -25,6 +25,16 @@ workflow TREEMIX_PIPELINE {
         iterations_ch = Channel.value(1)
     }
 
+    // check for previous treemix runs: read edges and vertices
+    if  (params.treemix_edges && params.treemix_vertices ) {
+        treemix_edges = file(params.treemix_edges)
+        treemix_vertices = file(params.treemix_vertices)
+    } else {
+        // https://nextflow-io.github.io/patterns/optional-input/
+        treemix_vertices = file("NO_FILE")
+        treemix_edges = file("NO_FILE")
+    }
+
     treemix_input_ch = treemix_freq
         .combine(migrations_ch)
         .combine(iterations_ch)
@@ -32,7 +42,7 @@ workflow TREEMIX_PIPELINE {
             [id: meta.id, migration: migration, iteration: iteration], path, migration, iteration]}
         // .view()
 
-    TREEMIX(treemix_input_ch)
+    TREEMIX(treemix_input_ch, treemix_vertices, treemix_edges)
     ch_versions = ch_versions.mix(TREEMIX.out.versions)
 
     // collect treemix output

@@ -9,6 +9,8 @@ process ORIENTAGRAPH {
 
     input:
     tuple val(meta), path(treemix_freq), val(migration), val(iteration)
+    file(treemix_vertices)
+    file(treemix_edges)
 
     output:
     tuple val(meta), path("*.treemix.gz")   , emit: treemix, optional: true
@@ -31,6 +33,7 @@ process ORIENTAGRAPH {
     def k_opt = params.treemix_k ? "-k ${params.treemix_k}" : ""
     def m_opt = migration ? "-m ${migration}" : ""
     def seed = (migration + task.attempt) * iteration
+    def gf_opt = (treemix_vertices.name != 'NO_FILE' && treemix_edges.name != 'NO_FILE') ? "-gf ${treemix_vertices} ${treemix_edges}" : ""
     def outfile = params.with_bootstrap ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
 
     if( params.with_bootstrap )
@@ -60,6 +63,7 @@ process ORIENTAGRAPH {
         """
         orientagraph \\
             -i ${treemix_freq} \\
+            ${gf_opt} \\
             ${outgroup_opt} \\
             ${k_opt} \\
             ${m_opt} \\
