@@ -6,41 +6,12 @@ include { OPTM                          } from '../modules/local/optm'
 
 workflow ORIENTAGRAPH_PIPELINE {
     take:
-    treemix_freq    // channel: [ val(meta), path(treemix_freq) ]]
+    treemix_input_ch    // channel: [ val(meta), path(treemix_freq), val(migration), val(iteration) ]]
+    treemix_vertices    // path to vertices file (if any)
+    treemix_edges       // path to edges file (if any)
 
     main:
     ch_versions = Channel.empty()
-
-    // define migration intervals
-    if ( params.single_migration || params.migrations == 0) {
-        migrations_ch = Channel.value( params.migrations )
-    } else {
-        migrations_ch = Channel.of( 1..params.migrations )//.view()
-    }
-
-    // define bootstrap iterations
-    if ( params.with_bootstrap ) {
-        iterations_ch = Channel.of ( 1..params.bootstrap_iterations )//.view()
-    } else {
-        iterations_ch = Channel.value(1)
-    }
-
-    // check for previous treemix runs: read edges and vertices
-    if  (params.treemix_edges && params.treemix_vertices ) {
-        treemix_edges = file(params.treemix_edges)
-        treemix_vertices = file(params.treemix_vertices)
-    } else {
-        // https://nextflow-io.github.io/patterns/optional-input/
-        treemix_vertices = file("NO_FILE")
-        treemix_edges = file("NO_FILE")
-    }
-
-    treemix_input_ch = treemix_freq
-        .combine(migrations_ch)
-        .combine(iterations_ch)
-        .map{ meta, path, migration, iteration -> [
-            [id: meta.id, migration: migration, iteration: iteration], path, migration, iteration]}
-        // .view()
 
     ORIENTAGRAPH(treemix_input_ch, treemix_vertices, treemix_edges)
     ch_versions = ch_versions.mix(ORIENTAGRAPH.out.versions)

@@ -44,11 +44,43 @@ workflow CNR_IBBA {
     // convert PLINK output into treemix input
     PLINK2TREEMIX(PLINK_FREQ.out.freq)
 
+    // define migration intervals
+    if ( params.single_migration || params.migrations == 0) {
+        migrations_ch = Channel.value( params.migrations )
+    } else {
+        migrations_ch = Channel.of( 1..params.migrations )//.view()
+    }
+
+    // define bootstrap iterations
+    if ( params.with_bootstrap ) {
+        iterations_ch = Channel.of ( 1..params.bootstrap_iterations )//.view()
+    } else {
+        iterations_ch = Channel.value(1)
+    }
+
+    // check for previous treemix runs: read edges and vertices
+    if  (params.treemix_edges && params.treemix_vertices ) {
+        treemix_edges = file(params.treemix_edges)
+        treemix_vertices = file(params.treemix_vertices)
+    } else {
+        // https://nextflow-io.github.io/patterns/optional-input/
+        treemix_vertices = file("NO_FILE")
+        treemix_edges = file("NO_FILE")
+    }
+
+    // create treemix input channel
+    treemix_input_ch = PLINK2TREEMIX.out.treemix_freq
+        .combine(migrations_ch)
+        .combine(iterations_ch)
+        .map{ meta, path, migration, iteration -> [
+            [id: meta.id, migration: migration, iteration: iteration], path, migration, iteration]}
+        // .view()
+
     if ( params.with_orientagraph ) {
-        ORIENTAGRAPH_PIPELINE(PLINK2TREEMIX.out.treemix_freq)
+        ORIENTAGRAPH_PIPELINE(treemix_input_ch, treemix_vertices, treemix_edges)
         ch_versions = ch_versions.mix(ORIENTAGRAPH_PIPELINE.out.versions)
     } else {
-        TREEMIX_PIPELINE(PLINK2TREEMIX.out.treemix_freq)
+        TREEMIX_PIPELINE(treemix_input_ch, treemix_vertices, treemix_edges)
         ch_versions = ch_versions.mix(TREEMIX_PIPELINE.out.versions)
     }
 
