@@ -24,9 +24,11 @@ process PLINK_SUBSET {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def bfile = "${bed.getBaseName()}"
+    def species_opt = "${params.plink_species_opts}"
     if( "$bed" == "${prefix}.bed" ) error "Input and output names are the same, use \"task.ext.prefix\" to disambiguate!"
     """
     plink \\
+        ${species_opt} \\
         --bfile ${bfile} \\
         --threads $task.cpus \\
         $args \\

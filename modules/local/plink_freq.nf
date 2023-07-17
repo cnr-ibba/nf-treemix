@@ -23,8 +23,10 @@ process PLINK_FREQ {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def species_opt = "${params.plink_species_opts}"
     """
     plink \\
+        ${species_opt} \\
         --bed ${bed}  \\
         --bim ${bim}  \\
         --fam ${fam}  \\
