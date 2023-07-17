@@ -39,4 +39,13 @@ process PLINK_FREQ {
         plink: \$(echo \$(plink --version) | sed 's/^PLINK v//;s/64.*//')
     END_VERSIONS
     """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.frq.strat.gz
+    touch ${prefix}.imiss
+    touch ${prefix}.lmiss
+    touch versions.yml
+    """
 }

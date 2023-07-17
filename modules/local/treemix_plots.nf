@@ -1,5 +1,5 @@
 process TREEMIX_PLOTS {
-    tag "$meta.id"
+    tag "$meta.id-m${meta.migration}-i${meta.iteration}"
     label 'process_single'
 
     conda "bioconda::treemix=1.13"
@@ -29,5 +29,11 @@ process TREEMIX_PLOTS {
     plot_tree("${stem}", cex=0.8)
     title(paste("${meta.id}", "${meta.migration}", "migrations"))
     dev.off()
+    """
+
+    stub:
+    def stem = llik.getBaseName()
+    """
+    touch ${stem}_tree.png
     """
 }

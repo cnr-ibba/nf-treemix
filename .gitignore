@@ -8,3 +8,7 @@ results/
 
 # ignore data dir
 data/
+
+# ignore custom files
+*.gz
+*.config

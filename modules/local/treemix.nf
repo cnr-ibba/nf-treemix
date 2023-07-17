@@ -1,7 +1,8 @@
+
 process TREEMIX {
-    tag "$meta.id-m${meta.migration}-i${iteration}"
+    tag "$meta.id-m${meta.migration}-i${meta.iteration}"
     label 'process_single'
-    label 'process_long'
+    label 'unlimited_time'
     label 'error_retry'
 
     conda "bioconda::treemix=1.13"
@@ -11,9 +12,11 @@ process TREEMIX {
 
     input:
     tuple val(meta), path(treemix_freq), val(migration), val(iteration)
+    file(treemix_vertices)
+    file(treemix_edges)
 
     output:
-    tuple val(meta), path("*.treemix.gz")   , emit: treemix
+    tuple val(meta), path("*.treemix.gz")   , emit: treemix, optional: true
     tuple val(meta), path("*.cov.gz")       , emit: cov
     tuple val(meta), path("*.covse.gz")     , emit: covse
     tuple val(meta), path("*.modelcov.gz")  , emit: modelcov
@@ -33,24 +36,59 @@ process TREEMIX {
     def k_opt = params.treemix_k ? "-k ${params.treemix_k}" : ""
     def m_opt = migration ? "-m ${migration}" : ""
     def seed = (migration + task.attempt) * iteration
-    """
-    # Generate bootstrapped input file with ~80% of the SNP loci
-    # inspired from https://rfitak.shinyapps.io/OptM/
-    gunzip -c ${treemix_freq} | awk 'BEGIN {srand(${seed})} { if (NR==1) {print \$0} else if (rand() <= .8) print \$0}' | gzip > ${prefix}.${iteration}.${migration}.treemix.gz
+    def g_opt = (treemix_vertices.name != 'NO_VERTICES' && treemix_edges.name != 'NO_EDGES') ? "-g ${treemix_vertices} ${treemix_edges}" : ""
+    def outfile = params.with_bootstrap ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
 
-    treemix \\
-        -i ${prefix}.${iteration}.${migration}.treemix.gz \\
-        ${outgroup_opt} \\
-        ${k_opt} \\
-        ${m_opt} \\
-        -seed ${seed} \\
-        -se \\
-        -global \\
-        ${args} \\
-        -o ${prefix}.${iteration}.${migration}
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        treemix: \$(echo \$(treemix --version 2>&1) | sed 's/^TreeMix v. //; s/ \$Revision.*//')
-    END_VERSIONS
+    if( params.with_bootstrap )
+        """
+        # Generate bootstrapped input file with ~80% of the SNP loci
+        # inspired from https://rfitak.shinyapps.io/OptM/
+        gunzip -c ${treemix_freq} | awk 'BEGIN {srand(${seed})} { if (NR==1) {print \$0} else if (rand() <= .8) print \$0}' | gzip > ${prefix}.${iteration}.${migration}.treemix.gz
+
+        treemix \\
+            -i ${prefix}.${iteration}.${migration}.treemix.gz \\
+            ${outgroup_opt} \\
+            ${k_opt} \\
+            ${m_opt} \\
+            -seed ${seed} \\
+            -se \\
+            -global \\
+            ${args} \\
+            -o ${outfile}
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            treemix: \$(echo \$(treemix --version 2>&1) | sed 's/^TreeMix v. //; s/ \$Revision.*//')
+        END_VERSIONS
+        """
+    else
+        """
+        treemix \\
+            -i ${treemix_freq} \\
+            ${g_opt} \\
+            ${outgroup_opt} \\
+            ${k_opt} \\
+            ${m_opt} \\
+            -se \\
+            -global \\
+            ${args} \\
+            -o ${outfile}
+        cat <<-END_VERSIONS > versions.yml
+        "${task.process}":
+            treemix: \$(echo \$(treemix --version 2>&1) | sed 's/^TreeMix v. //; s/ \$Revision.*//')
+        END_VERSIONS
+        """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def outfile = params.with_bootstrap ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
+    """
+    touch ${outfile}.cov.gz
+    touch ${outfile}.covse.gz
+    touch ${outfile}.modelcov.gz
+    touch ${outfile}.treeout.gz
+    touch ${outfile}.vertices.gz
+    touch ${outfile}.edges.gz
+    touch ${outfile}.llik
+    touch versions.yml
     """
 }

@@ -38,4 +38,13 @@ process PLINK_SUBSET {
         plink: \$(echo \$(plink --version) | sed 's/^PLINK v//;s/64.*//')
     END_VERSIONS
     """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.bed
+    touch ${prefix}.bim
+    touch ${prefix}.fam
+    touch versions.yml
+    """
 }
