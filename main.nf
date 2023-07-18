@@ -48,7 +48,7 @@ workflow CNR_IBBA {
     if ( params.single_migration || params.migrations == 0) {
         migrations_ch = Channel.value( params.migrations )
     } else {
-        migrations_ch = Channel.of( 1..params.migrations )//.view()
+        migrations_ch = Channel.of( 0..params.migrations )//.view()
     }
 
     // define bootstrap iterations
