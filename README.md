@@ -30,24 +30,24 @@ plink binary file *prefix* (the same way you use to specify it with PLINK)
 and the samples TSV as a parameters, for example:
 
 ```bash
-nexflow run cnr-ibba/nf-treemix --input <samples TSV> --plink_prefix <the plink prefix>
+nexflow run cnr-ibba/nf-treemix -profile singularity --input <samples TSV> \
+    --plink_prefix <the plink prefix>
 ```
 
 You can provide outgroup to *treemix* simply by passing the `--treemix_outgroup`
 option, for example:
 
 ```bash
-nexflow run cnr-ibba/nf-treemix --input <samples TSV> --plink_prefix <the plink prefix> \
-    treemix_outgroup <you outgroup ID>
+nexflow run cnr-ibba/nf-treemix -profile singularity --input <samples TSV> \
+    --plink_prefix <the plink prefix> --treemix_outgroup <you outgroup ID>
 ```
-
 
 If you want to test different migration hypothesis, you could provide the
 migrations steps with the `--migrations` parameter:
 
 ```bash
-nexflow run cnr-ibba/nf-treemix --input <samples TSV> --plink_prefix <the plink prefix> \
-    --migrations 5
+nexflow run cnr-ibba/nf-treemix -profile singularity --input <samples TSV> \
+    --plink_prefix <the plink prefix> --migrations 5
 ```
 
 This will call treemix 5 times, each one evaluating a different migration. If you
@@ -55,31 +55,33 @@ want to call a single migration (for example, only *M=5*), you can add `--single
 option to nextflow command line:
 
 ```bash
-nexflow run cnr-ibba/nf-treemix --input <samples TSV> --plink_prefix <the plink prefix> \
-    --migrations 5 --single_migration
+nexflow run cnr-ibba/nf-treemix -profile singularity --input <samples TSV> \
+    --plink_prefix <the plink prefix> --migrations 5 --single_migration
 ```
 
 You can perform a bootstrap evaluation with treemix providing `--with_bootstrap`
-and `--bootstrap_iterations` parameters:
+and `--bootstrap_iterations` parameters. This pipeline will perform a boostrapping
+of 80% of the SNP data in each iterations:
 
 ```bash
-nexflow run cnr-ibba/nf-treemix --input <samples TSV> --plink_prefix <the plink prefix> \
-    --migrations 5 --with_bootstrap --bootstrap_iterations 5
+nexflow run cnr-ibba/nf-treemix -profile singularity --input <samples TSV> \
+    --plink_prefix <the plink prefix> --migrations 5 --with_bootstrap \
+    --bootstrap_iterations 5
 ```
 
 If you prefer calling *OrientaGraph* instead of *treemix*, you can use the
 `--with_orientagraph` option:
 
 ```bash
-nexflow run cnr-ibba/nf-treemix --input <samples TSV> --plink_prefix <the plink prefix> \
-    --migrations 5 --with_bootstrap --bootstrap_iterations 5 --with_orientagraph
+nexflow run cnr-ibba/nf-treemix -profile singularity --input <samples TSV> \
+    --plink_prefix <the plink prefix> --migrations 5 --with_bootstrap \
+    --bootstrap_iterations 5 --with_orientagraph
 ```
 
 ### Creating a configuration file
 
 The best way to manage this pipeline is to create a custom configuration file in
 which you can specify the parameters you need:
-
 
 ```txt
 params {
