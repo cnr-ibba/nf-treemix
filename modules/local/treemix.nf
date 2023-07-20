@@ -41,18 +41,15 @@ process TREEMIX {
 
     if( params.with_bootstrap )
         """
-        # Generate bootstrapped input file with ~80% of the SNP loci
-        # inspired from https://rfitak.shinyapps.io/OptM/
-        gunzip -c ${treemix_freq} | awk 'BEGIN {srand(${seed})} { if (NR==1) {print \$0} else if (rand() <= .8) print \$0}' | gzip > ${prefix}.${iteration}.${migration}.treemix.gz
-
         treemix \\
-            -i ${prefix}.${iteration}.${migration}.treemix.gz \\
+            -i ${treemix_freq} \\
             ${outgroup_opt} \\
             ${k_opt} \\
             ${m_opt} \\
             -seed ${seed} \\
             -se \\
             -global \\
+            -bootstrap \\
             ${args} \\
             -o ${outfile}
         cat <<-END_VERSIONS > versions.yml
