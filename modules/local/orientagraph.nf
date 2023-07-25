@@ -13,7 +13,6 @@ process ORIENTAGRAPH {
     file(treemix_edges)
 
     output:
-    tuple val(meta), path("*.treemix.gz")   , emit: treemix, optional: true
     tuple val(meta), path("*.cov.gz")       , emit: cov
     tuple val(meta), path("*.covse.gz")     , emit: covse
     tuple val(meta), path("*.modelcov.gz")  , emit: modelcov
@@ -34,9 +33,9 @@ process ORIENTAGRAPH {
     def m_opt = migration ? "-m ${migration}" : ""
     def seed = (migration + task.attempt) * iteration
     def gf_opt = (treemix_vertices.name != 'NO_VERTICES' && treemix_edges.name != 'NO_EDGES') ? "-gf ${treemix_vertices} ${treemix_edges}" : ""
-    def outfile = params.with_bootstrap ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
+    def outfile = (params.n_iterations > 1) ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
 
-    if( params.with_bootstrap )
+    if( params.n_iterations > 1 )
         """
         orientagraph \\
             -i ${treemix_freq} \\
@@ -46,7 +45,6 @@ process ORIENTAGRAPH {
             -seed ${seed} \\
             -se \\
             -global \\
-            -bootstrap \\
             -allmigs \\
             -mlno \\
             ${args} \\
@@ -78,7 +76,7 @@ process ORIENTAGRAPH {
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def outfile = params.with_bootstrap ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
+    def outfile = "${prefix}.${migration}"
     """
     touch ${outfile}.cov.gz
     touch ${outfile}.covse.gz

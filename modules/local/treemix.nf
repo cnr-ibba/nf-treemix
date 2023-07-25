@@ -16,7 +16,6 @@ process TREEMIX {
     file(treemix_edges)
 
     output:
-    tuple val(meta), path("*.treemix.gz")   , emit: treemix, optional: true
     tuple val(meta), path("*.cov.gz")       , emit: cov
     tuple val(meta), path("*.covse.gz")     , emit: covse
     tuple val(meta), path("*.modelcov.gz")  , emit: modelcov
@@ -37,9 +36,9 @@ process TREEMIX {
     def m_opt = migration ? "-m ${migration}" : ""
     def seed = (migration + task.attempt) * iteration
     def g_opt = (treemix_vertices.name != 'NO_VERTICES' && treemix_edges.name != 'NO_EDGES') ? "-g ${treemix_vertices} ${treemix_edges}" : ""
-    def outfile = params.with_bootstrap ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
+    def outfile = (params.n_iterations > 1) ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
 
-    if( params.with_bootstrap )
+    if( params.n_iterations > 1 )
         """
         treemix \\
             -i ${treemix_freq} \\
@@ -49,7 +48,6 @@ process TREEMIX {
             -seed ${seed} \\
             -se \\
             -global \\
-            -bootstrap \\
             ${args} \\
             -o ${outfile}
         cat <<-END_VERSIONS > versions.yml
@@ -77,7 +75,7 @@ process TREEMIX {
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def outfile = params.with_bootstrap ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
+    def outfile = "${prefix}.${migration}"
     """
     touch ${outfile}.cov.gz
     touch ${outfile}.covse.gz

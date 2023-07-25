@@ -4,7 +4,7 @@
 
 # ignore results dir
 work/
-results/
+results*
 
 # ignore data dir
 data/

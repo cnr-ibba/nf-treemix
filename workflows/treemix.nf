@@ -29,7 +29,7 @@ workflow TREEMIX_PIPELINE {
     // plot graphs
     TREEMIX_PLOTS(treemix_out_ch)
 
-    if ( params.with_bootstrap ) {
+    if ( params.n_iterations > 1 ) {
         // prepare OptM input
         optM_input_ch = TREEMIX.out.cov.map{ meta, file -> file }
             .concat(TREEMIX.out.modelcov.map{ meta, file -> file })
