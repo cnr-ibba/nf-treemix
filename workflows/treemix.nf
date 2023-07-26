@@ -47,6 +47,7 @@ workflow TREEMIX_PIPELINE {
         sumtrees_input_ch = TREEMIX.out.treeout
             .map{ meta, path -> [meta, meta.migration, path]}
             .groupTuple(by: 1)
+            .map{ meta, migration, path -> [[id: meta[0].id], migration, path]}
             // .view()
 
         SUMTREES(sumtrees_input_ch)

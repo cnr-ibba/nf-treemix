@@ -1,5 +1,5 @@
 process SUMTREES {
-    tag "${meta[0].id}-m${migration}"
+    tag "${meta.id}-m${migration}"
     label 'process_single'
 
     conda "bioconda::dendropy==4.6.1"
@@ -11,15 +11,15 @@ process SUMTREES {
     tuple val(meta), val(migration), path(treeout)
 
     output:
-    tuple val(meta), path("*.tre")          , emit: consensus
-    path "versions.yml"                     , emit: versions
+    tuple val(meta), val(migration), path("*.tre")  , emit: consensus_tre
+    path "versions.yml"                             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id[0]}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def outfile = "${prefix}.${migration}.consensus.tre"
     """
     trees=(${treeout})
@@ -37,6 +37,7 @@ process SUMTREES {
         --no-taxa-block \\
         --no-analysis-metainformation \\
         ${args} \\
+        --replace \\
         -
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
