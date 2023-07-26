@@ -46,7 +46,7 @@ process SUMTREES {
     """
 
     stub:
-    def prefix = task.ext.prefix ?: "${meta.id[0]}"
+    def prefix = task.ext.prefix ?: "${meta.id}"
     def outfile = "${prefix}.${migration}.consensus.tre"
     """
     touch ${outfile}
