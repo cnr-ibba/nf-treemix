@@ -1,6 +1,6 @@
 
 include { TREEMIX                                                   } from '../modules/local/treemix'
-include { TREEMIX_PLOTS; TREEMIX_PLOTS as TREEMIX_CONSENSUS_PLOTS   } from '../modules/local/treemix_plots'
+include { TREEMIX_PLOTS as PLOTS; TREEMIX_PLOTS as CONSENSUS_PLOTS  } from '../modules/local/treemix_plots'
 include { OPTM                                                      } from '../modules/local/optm'
 include { SUMTREES                                                  } from '../modules/local/sumtrees'
 include { TREEMIX_CONSENSUS                                         } from '../modules/local/treemix_consensus'
@@ -29,7 +29,7 @@ workflow TREEMIX_PIPELINE {
         // .view()
 
     // plot graphs
-    TREEMIX_PLOTS(treemix_out_ch)
+    PLOTS(treemix_out_ch)
 
     if ( params.n_iterations > 1 ) {
         // prepare OptM input
@@ -74,7 +74,7 @@ workflow TREEMIX_PIPELINE {
             // .view()
 
         // plot graphs
-        TREEMIX_CONSENSUS_PLOTS(treemix_consensus_out_ch)
+        CONSENSUS_PLOTS(treemix_consensus_out_ch)
     }
 
     emit:
