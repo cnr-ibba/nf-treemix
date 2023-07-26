@@ -75,7 +75,7 @@ process TREEMIX {
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def outfile = "${prefix}.${migration}"
+    def outfile = (params.n_iterations > 1) ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
     """
     touch ${outfile}.cov.gz
     touch ${outfile}.covse.gz

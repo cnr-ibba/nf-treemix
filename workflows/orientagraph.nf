@@ -2,6 +2,7 @@
 include { ORIENTAGRAPH                  } from '../modules/local/orientagraph'
 include { TREEMIX_PLOTS                 } from '../modules/local/treemix_plots'
 include { OPTM                          } from '../modules/local/optm'
+include { SUMTREES                      } from '../modules/local/sumtrees'
 
 
 workflow ORIENTAGRAPH_PIPELINE {
@@ -41,6 +42,15 @@ workflow ORIENTAGRAPH_PIPELINE {
         // calculate graphs with OptM
         methods = ["Evanno", "linear", "SiZer"]
         OPTM(optM_input_ch, methods)
+
+        // create a consensus tree
+        sumtrees_input_ch = ORIENTAGRAPH.out.treeout
+            .map{ meta, path -> [meta, meta.migration, path]}
+            .groupTuple(by: 1)
+            // .view()
+
+        SUMTREES(sumtrees_input_ch)
+        ch_versions = ch_versions.mix(SUMTREES.out.versions)
     }
 
     emit:
