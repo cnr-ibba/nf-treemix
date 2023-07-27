@@ -36,11 +36,9 @@ process TREEMIX_CONSENSUS {
     def outfile = "${prefix}.${migration}"
 
     """
-    sed 's/^\\[&R\\] //' ${consensus_tre} > ${consensus_tre}.fixed
-
     treemix \\
         -i ${treemix_freq} \\
-        -tf ${consensus_tre}.fixed \\
+        -tf ${consensus_tre} \\
         ${outgroup_opt} \\
         ${k_opt} \\
         ${m_opt} \\

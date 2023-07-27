@@ -31,14 +31,15 @@ process SUMTREES {
         --source-format newick \\
         --multiprocessing ${task.cpus} \\
         --quiet \\
-        --output ${outfile} \\
         --labels keep \\
         --suppress-annotations \\
         --no-taxa-block \\
         --no-analysis-metainformation \\
         ${args} \\
         --replace \\
-        -
+        - | \\
+    sed 's/^\\[&R\\] //' > ${outfile}
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         sumtrees.py: \$(sumtrees.py --version | sed '4!d;s/.*Version //;s/ .*//')
