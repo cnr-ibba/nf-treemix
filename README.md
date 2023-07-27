@@ -118,3 +118,9 @@ process {
 You can have a list of all the available options by inspecting the
 [nextflow.config](https://github.com/cnr-ibba/nf-treemix/blob/master/nextflow.config)
 file of this pipeline
+
+## Known issues
+
+Executing the whole pipeline with *orientagraph* raise issues when calculate
+the consensus tree in `ORIENTAGRAPH_CONSENSUS` step. Please use treemix as
+preferred approach when using *boostrapping/iterations* with consensus trees.
