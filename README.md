@@ -89,6 +89,7 @@ params {
     input                   = "<your TSV file>"
     plink_prefix            = "<the PLINK prefix>"
     migrations              = 5
+    single_migration        = false
 
     // treemix options
     treemix_outgroup        = "<your outgroup id>"
