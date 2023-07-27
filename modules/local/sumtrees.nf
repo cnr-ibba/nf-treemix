@@ -35,6 +35,8 @@ process SUMTREES {
         --suppress-annotations \\
         --no-taxa-block \\
         --no-analysis-metainformation \\
+        --set-edges support \\
+        --percentages \\
         ${args} \\
         --replace \\
         - | \\
