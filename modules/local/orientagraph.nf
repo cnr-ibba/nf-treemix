@@ -13,7 +13,6 @@ process ORIENTAGRAPH {
     file(treemix_edges)
 
     output:
-    tuple val(meta), path("*.treemix.gz")   , emit: treemix, optional: true
     tuple val(meta), path("*.cov.gz")       , emit: cov
     tuple val(meta), path("*.covse.gz")     , emit: covse
     tuple val(meta), path("*.modelcov.gz")  , emit: modelcov
@@ -34,16 +33,12 @@ process ORIENTAGRAPH {
     def m_opt = migration ? "-m ${migration}" : ""
     def seed = (migration + task.attempt) * iteration
     def gf_opt = (treemix_vertices.name != 'NO_VERTICES' && treemix_edges.name != 'NO_EDGES') ? "-gf ${treemix_vertices} ${treemix_edges}" : ""
-    def outfile = params.with_bootstrap ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
+    def outfile = (params.n_iterations > 1) ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
 
-    if( params.with_bootstrap )
+    if( params.n_iterations > 1 )
         """
-        # Generate bootstrapped input file with ~80% of the SNP loci
-        # inspired from https://rfitak.shinyapps.io/OptM/
-        gunzip -c ${treemix_freq} | awk 'BEGIN {srand(${seed})} { if (NR==1) {print \$0} else if (rand() <= .8) print \$0}' | gzip > ${prefix}.${iteration}.${migration}.treemix.gz
-
         orientagraph \\
-            -i ${prefix}.${iteration}.${migration}.treemix.gz \\
+            -i ${treemix_freq} \\
             ${outgroup_opt} \\
             ${k_opt} \\
             ${m_opt} \\
@@ -81,7 +76,7 @@ process ORIENTAGRAPH {
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def outfile = params.with_bootstrap ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
+    def outfile = (params.n_iterations > 1) ? "${prefix}.${iteration}.${migration}" : "${prefix}.${migration}"
     """
     touch ${outfile}.cov.gz
     touch ${outfile}.covse.gz

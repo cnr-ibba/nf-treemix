@@ -1,7 +1,9 @@
 
-include { ORIENTAGRAPH                  } from '../modules/local/orientagraph'
-include { TREEMIX_PLOTS                 } from '../modules/local/treemix_plots'
-include { OPTM                          } from '../modules/local/optm'
+include { ORIENTAGRAPH                                              } from '../modules/local/orientagraph'
+include { TREEMIX_PLOTS as PLOTS; TREEMIX_PLOTS as CONSENSUS_PLOTS  } from '../modules/local/treemix_plots'
+include { OPTM                                                      } from '../modules/local/optm'
+include { SUMTREES                                                  } from '../modules/local/sumtrees'
+include { ORIENTAGRAPH_CONSENSUS                                    } from '../modules/local/orientagraph_consensus'
 
 
 workflow ORIENTAGRAPH_PIPELINE {
@@ -27,9 +29,9 @@ workflow ORIENTAGRAPH_PIPELINE {
         // .view()
 
     // plot graphs
-    TREEMIX_PLOTS(treemix_out_ch)
+    PLOTS(treemix_out_ch)
 
-    if ( params.with_bootstrap ) {
+    if ( params.n_iterations > 1 ) {
         // prepare OptM input
         optM_input_ch = ORIENTAGRAPH.out.cov.map{ meta, file -> file }
             .concat(ORIENTAGRAPH.out.modelcov.map{ meta, file -> file })
@@ -41,6 +43,38 @@ workflow ORIENTAGRAPH_PIPELINE {
         // calculate graphs with OptM
         methods = ["Evanno", "linear", "SiZer"]
         OPTM(optM_input_ch, methods)
+
+        // create a consensus tree
+        sumtrees_input_ch = ORIENTAGRAPH.out.treeout
+            .map{ meta, path -> [meta, meta.migration, path]}
+            .groupTuple(by: 1)
+            .map{ meta, migration, path -> [[id: meta[0].id, migration: migration, iteration: 1], migration, path]}
+            // .view()
+
+        SUMTREES(sumtrees_input_ch)
+        ch_versions = ch_versions.mix(SUMTREES.out.versions)
+
+        // all treemix_freq values in this channel are equal: take first one
+        treemix_freq_ch = treemix_input_ch
+            .first()
+            .map{ meta, treemix_freq, migration, iteration -> [[id: meta.id], treemix_freq]}
+            // .view()
+
+        ORIENTAGRAPH_CONSENSUS(treemix_freq_ch, SUMTREES.out.consensus_tre)
+        ch_versions = ch_versions.mix(ORIENTAGRAPH_CONSENSUS.out.versions)
+
+        // collect treemix output
+        treemix_consensus_out_ch = ORIENTAGRAPH_CONSENSUS.out.cov
+            .join(ORIENTAGRAPH_CONSENSUS.out.covse)
+            .join(ORIENTAGRAPH_CONSENSUS.out.modelcov)
+            .join(ORIENTAGRAPH_CONSENSUS.out.treeout)
+            .join(ORIENTAGRAPH_CONSENSUS.out.vertices)
+            .join(ORIENTAGRAPH_CONSENSUS.out.edges)
+            .join(ORIENTAGRAPH_CONSENSUS.out.llik)
+            // .view()
+
+        // plot graphs
+        CONSENSUS_PLOTS(treemix_consensus_out_ch)
     }
 
     emit:

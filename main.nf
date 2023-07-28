@@ -52,8 +52,8 @@ workflow CNR_IBBA {
     }
 
     // define bootstrap iterations
-    if ( params.with_bootstrap ) {
-        iterations_ch = Channel.of ( 1..params.bootstrap_iterations )//.view()
+    if ( params.n_iterations > 1 ) {
+        iterations_ch = Channel.of ( 1..params.n_iterations )//.view()
     } else {
         iterations_ch = Channel.value(1)
     }

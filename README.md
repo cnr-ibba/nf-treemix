@@ -8,7 +8,7 @@ A nextflow pipeline which executes *treemix* on a population of interest
 This pipeline is an attempt to call [treemix](https://bitbucket.org/nygcresearch/treemix/wiki/Home)
 on a PLINK binary file. All the steps required to produce the *treemix* input files
 are managed within this pipeline.
-This pipeline implement also a bootstrapping version of *treemix*, and can evaluate
+This pipeline support launching *treemix* multiple times, and can evaluate
 results with the [OptM](https://cran.r-project.org/web/packages/OptM/index.html)
 package. It's also possible to replace *treemix* with [OrientaGraph](https://github.com/sriramlab/OrientAGraph)
 
@@ -59,23 +59,23 @@ nexflow run cnr-ibba/nf-treemix -profile singularity --input <samples TSV> \
     --plink_prefix <the plink prefix> --migrations 5 --single_migration
 ```
 
-You can perform a bootstrap evaluation with treemix providing `--with_bootstrap`
-and `--bootstrap_iterations` parameters. This pipeline will perform a boostrapping
-of 80% of the SNP data in each iterations:
+You can evaluate a single migration hypothesis multiple times, by providing the
+`--n_iterations` parameter:
 
 ```bash
 nexflow run cnr-ibba/nf-treemix -profile singularity --input <samples TSV> \
-    --plink_prefix <the plink prefix> --migrations 5 --with_bootstrap \
-    --bootstrap_iterations 5
+    --plink_prefix <the plink prefix> --migrations 5 --n_iterations 5
 ```
 
+Having more than 1 iterations let you to evaluate models with the
+[OptM](https://cran.r-project.org/web/packages/OptM/index.html) r-package.
 If you prefer calling *OrientaGraph* instead of *treemix*, you can use the
 `--with_orientagraph` option:
 
 ```bash
 nexflow run cnr-ibba/nf-treemix -profile singularity --input <samples TSV> \
-    --plink_prefix <the plink prefix> --migrations 5 --with_bootstrap \
-    --bootstrap_iterations 5 --with_orientagraph
+    --plink_prefix <the plink prefix> --migrations 5 --n_iterations 5 \
+    --with_orientagraph
 ```
 
 ### Creating a configuration file
@@ -89,6 +89,7 @@ params {
     input                   = "<your TSV file>"
     plink_prefix            = "<the PLINK prefix>"
     migrations              = 5
+    single_migration        = false
 
     // treemix options
     treemix_outgroup        = "<your outgroup id>"
@@ -97,12 +98,29 @@ params {
     // PLINK options (required to subset data properly)
     plink_species_opts      = '--chr-set 26 no-xy no-mt --allow-no-sex'
 
-    // pipeline option
-    with_bootstrap          = true
-    bootstrap_iterations    = 5
+    // iterations options
+    n_iterations            = 1
+}
+```
+
+This let you to provide to software additional parameters. For example, if you
+want to provide the `-bootstrap` option to *treemix*, you can provide it using
+`ext.args` key, for example:
+
+```txt
+process {
+    withName: TREEMIX {
+        ext.args = '-bootstrap'
+    }
 }
 ```
 
 You can have a list of all the available options by inspecting the
 [nextflow.config](https://github.com/cnr-ibba/nf-treemix/blob/master/nextflow.config)
 file of this pipeline
+
+## Known issues
+
+Executing the whole pipeline with *orientagraph* raise issues when calculate
+the consensus tree in `ORIENTAGRAPH_CONSENSUS` step. Please use treemix as
+preferred approach when using *boostrapping/iterations* with consensus trees.

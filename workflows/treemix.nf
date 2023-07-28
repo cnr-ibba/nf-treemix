@@ -1,7 +1,9 @@
 
-include { TREEMIX                       } from '../modules/local/treemix'
-include { TREEMIX_PLOTS                 } from '../modules/local/treemix_plots'
-include { OPTM                          } from '../modules/local/optm'
+include { TREEMIX                                                   } from '../modules/local/treemix'
+include { TREEMIX_PLOTS as PLOTS; TREEMIX_PLOTS as CONSENSUS_PLOTS  } from '../modules/local/treemix_plots'
+include { OPTM                                                      } from '../modules/local/optm'
+include { SUMTREES                                                  } from '../modules/local/sumtrees'
+include { TREEMIX_CONSENSUS                                         } from '../modules/local/treemix_consensus'
 
 
 workflow TREEMIX_PIPELINE {
@@ -27,9 +29,9 @@ workflow TREEMIX_PIPELINE {
         // .view()
 
     // plot graphs
-    TREEMIX_PLOTS(treemix_out_ch)
+    PLOTS(treemix_out_ch)
 
-    if ( params.with_bootstrap ) {
+    if ( params.n_iterations > 1 ) {
         // prepare OptM input
         optM_input_ch = TREEMIX.out.cov.map{ meta, file -> file }
             .concat(TREEMIX.out.modelcov.map{ meta, file -> file })
@@ -41,6 +43,38 @@ workflow TREEMIX_PIPELINE {
         // calculate graphs with OptM
         methods = ["Evanno", "linear", "SiZer"]
         OPTM(optM_input_ch, methods)
+
+        // create a consensus tree
+        sumtrees_input_ch = TREEMIX.out.treeout
+            .map{ meta, path -> [meta, meta.migration, path]}
+            .groupTuple(by: 1)
+            .map{ meta, migration, path -> [[id: meta[0].id, migration: migration, iteration: 1], migration, path]}
+            // .view()
+
+        SUMTREES(sumtrees_input_ch)
+        ch_versions = ch_versions.mix(SUMTREES.out.versions)
+
+        // all treemix_freq values in this channel are equal: take first one
+        treemix_freq_ch = treemix_input_ch
+            .first()
+            .map{ meta, treemix_freq, migration, iteration -> [[id: meta.id], treemix_freq]}
+            // .view()
+
+        TREEMIX_CONSENSUS(treemix_freq_ch, SUMTREES.out.consensus_tre)
+        ch_versions = ch_versions.mix(TREEMIX_CONSENSUS.out.versions)
+
+        // collect treemix output
+        treemix_consensus_out_ch = TREEMIX_CONSENSUS.out.cov
+            .join(TREEMIX_CONSENSUS.out.covse)
+            .join(TREEMIX_CONSENSUS.out.modelcov)
+            .join(TREEMIX_CONSENSUS.out.treeout)
+            .join(TREEMIX_CONSENSUS.out.vertices)
+            .join(TREEMIX_CONSENSUS.out.edges)
+            .join(TREEMIX_CONSENSUS.out.llik)
+            // .view()
+
+        // plot graphs
+        CONSENSUS_PLOTS(treemix_consensus_out_ch)
     }
 
     emit:
