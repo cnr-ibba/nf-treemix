@@ -6,7 +6,7 @@ process PLINK2TREEMIX {
     tuple val(meta), path(plink_freq)
 
     output:
-    tuple val(meta), path("*.treemix.frq.gz"), emit: treemix_freq
+    tuple val(meta), path("*.treemix.frq.nomiss.gz"), emit: treemix_freq
 
     when:
     task.ext.when == null || task.ext.when
@@ -17,11 +17,15 @@ process PLINK2TREEMIX {
     plink2treemix.py \\
         ${plink_freq} \\
         ${prefix}.treemix.frq.gz
+    zcat \\
+        ${prefix}.treemix.frq.gz | sed '/ 0,0 /d' | gzip --best > ${prefix}.treemix.frq.nomiss.gz
+
     """
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     touch ${prefix}.treemix.frq.gz
+    touch ${prefix}.treemix.frq.nomiss.gz
     """
 }
