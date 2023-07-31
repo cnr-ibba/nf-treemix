@@ -21,13 +21,14 @@ process SUMTREES {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def outfile = "${prefix}.${migration}.consensus.tre"
+    def rooted_opt = params.treemix_outgroup ? "--rooted" : ""
     """
     trees=(${treeout})
     for tree in "\${trees[@]}" ; do \\
         head -n1 <(zcat \$tree) ; \\
     done | \\
     sumtrees.py \\
-        --rooted \\
+        ${rooted_opt} \\
         --source-format newick \\
         --multiprocessing ${task.cpus} \\
         --quiet \\
@@ -40,7 +41,7 @@ process SUMTREES {
         ${args} \\
         --replace \\
         - | \\
-    sed 's/^\\[&R\\] //' > ${outfile}
+    sed 's/^\\[&[RU]\\] //' > ${outfile}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
