@@ -3,7 +3,8 @@ process ORIENTAGRAPH_CONSENSUS {
     tag "$meta.id-m${migration}"
     label 'process_single'
     label 'unlimited_time'
-    label 'error_retry'
+
+    errorStrategy  { task.attempt <= maxRetries  ? 'retry' : 'ignore' }
 
     container "bunop/orientagraph:0.1"
 
