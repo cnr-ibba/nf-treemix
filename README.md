@@ -7,10 +7,11 @@ A nextflow pipeline which executes *treemix* on a population of interest
 
 This pipeline is an attempt to call [treemix](https://bitbucket.org/nygcresearch/treemix/wiki/Home)
 on a PLINK binary file. All the steps required to produce the *treemix* input files
-are managed within this pipeline.
-This pipeline support launching *treemix* multiple times, and can evaluate
-results with the [OptM](https://cran.r-project.org/web/packages/OptM/index.html)
-package. It's also possible to replace *treemix* with [OrientaGraph](https://github.com/sriramlab/OrientAGraph)
+are managed within this pipeline. It's possible to calculate multiple iterations
+(and adding `-bootstrap` as additional parameter) results will be evaluated
+with the [OptM](https://cran.r-project.org/web/packages/OptM/index.html)
+package and a consensus tree will be finally generated.
+It's also possible to replace *treemix* with [OrientaGraph](https://github.com/sriramlab/OrientAGraph)
 
 ## Data preparation
 
@@ -115,12 +116,9 @@ process {
 }
 ```
 
+Remember that process configurations have a different scopes than parameters, so
+they need to declared outside parameter configuration.
+
 You can have a list of all the available options by inspecting the
 [nextflow.config](https://github.com/cnr-ibba/nf-treemix/blob/master/nextflow.config)
 file of this pipeline
-
-## Known issues
-
-Executing the whole pipeline with *orientagraph* raise issues when calculate
-the consensus tree in `ORIENTAGRAPH_CONSENSUS` step. Please use treemix as
-preferred approach when using *boostrapping/iterations* with consensus trees.

@@ -2,7 +2,7 @@
 include { ORIENTAGRAPH                                              } from '../modules/local/orientagraph'
 include { TREEMIX_PLOTS as PLOTS; TREEMIX_PLOTS as CONSENSUS_PLOTS  } from '../modules/local/treemix_plots'
 include { OPTM                                                      } from '../modules/local/optm'
-include { SUMTREES                                                  } from '../modules/local/sumtrees'
+include { PHYLIP_CONSENSUS                                          } from '../modules/local/phylip_consensus'
 include { ORIENTAGRAPH_CONSENSUS                                    } from '../modules/local/orientagraph_consensus'
 
 
@@ -44,15 +44,16 @@ workflow ORIENTAGRAPH_PIPELINE {
         methods = ["Evanno", "linear", "SiZer"]
         OPTM(optM_input_ch, methods)
 
-        // create a consensus tree
-        sumtrees_input_ch = ORIENTAGRAPH.out.treeout
+        // collect all trees
+        trees_input_ch = ORIENTAGRAPH.out.treeout
             .map{ meta, path -> [meta, meta.migration, path]}
             .groupTuple(by: 1)
             .map{ meta, migration, path -> [[id: meta[0].id, migration: migration, iteration: 1], migration, path]}
             // .view()
 
-        SUMTREES(sumtrees_input_ch)
-        ch_versions = ch_versions.mix(SUMTREES.out.versions)
+        // create a consensus tree
+        PHYLIP_CONSENSUS(trees_input_ch)
+        ch_versions = ch_versions.mix(PHYLIP_CONSENSUS.out.versions)
 
         // all treemix_freq values in this channel are equal: take first one
         treemix_freq_ch = treemix_input_ch
@@ -60,7 +61,7 @@ workflow ORIENTAGRAPH_PIPELINE {
             .map{ meta, treemix_freq, migration, iteration -> [[id: meta.id], treemix_freq]}
             // .view()
 
-        ORIENTAGRAPH_CONSENSUS(treemix_freq_ch, SUMTREES.out.consensus_tre)
+        ORIENTAGRAPH_CONSENSUS(treemix_freq_ch, PHYLIP_CONSENSUS.out.consensus_tre)
         ch_versions = ch_versions.mix(ORIENTAGRAPH_CONSENSUS.out.versions)
 
         // collect treemix output

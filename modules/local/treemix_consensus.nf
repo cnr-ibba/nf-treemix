@@ -3,7 +3,8 @@ process TREEMIX_CONSENSUS {
     tag "$meta.id-m${migration}"
     label 'process_single'
     label 'unlimited_time'
-    label 'error_retry'
+
+    errorStrategy  { task.attempt <= maxRetries  ? 'retry' : 'ignore' }
 
     conda "bioconda::treemix=1.13"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?

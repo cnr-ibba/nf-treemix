@@ -49,6 +49,13 @@ process ORIENTAGRAPH {
             -mlno \\
             ${args} \\
             -o ${outfile}
+
+        if grep -q -i nan ${outfile}.llik
+        then
+            echo "Got an NaN in file"
+            exit 1
+        fi
+
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
             orientagraph: \$(echo \$(orientagraph --version 2>&1) | head -n1 | sed 's/^OrientAGraph //; s/ OrientAGraph is built from TreeMix.*//')

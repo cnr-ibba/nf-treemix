@@ -50,6 +50,13 @@ process TREEMIX {
             -global \\
             ${args} \\
             -o ${outfile}
+
+        if grep -q -i nan ${outfile}.llik
+        then
+            echo "Got an NaN in file"
+            exit 1
+        fi
+
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
             treemix: \$(echo \$(treemix --version 2>&1) | sed 's/^TreeMix v. //; s/ \$Revision.*//')
